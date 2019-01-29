@@ -25,6 +25,7 @@
             app:hintTextAppearance="@style/MyHintText">
 
             <EditText
+                android:id="@+id/name"
                 android:layout_marginBottom="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -39,12 +40,19 @@
             app:hintTextAppearance="@style/MyHintText">
 
             <EditText
+                android:id="@+id/telp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="No telp"
                 android:theme="@style/MyEditText" />
 
         </android.support.design.widget.TextInputLayout>
+
+        <Spinner
+            android:layout_marginTop="10dp"
+            android:id="@+id/province"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/textView"

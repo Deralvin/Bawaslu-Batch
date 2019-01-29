@@ -21,10 +21,13 @@ import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,14 +37,14 @@ import com.karumi.dexter.PermissionToken;
 import com.karumi.dexter.listener.PermissionRequest;
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
-import java.io.BufferedWriter;
+
 import java.io.File;
 import java.util.List;
 
 import id.pptik.bawaslubatch.R;
 import id.pptik.bawaslubatch.helpers.CameraUtils;
 
-public class RegisterActivity extends AppCompatActivity {
+public class RegisterActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener {
 
     // Activity request codes
     private static final int CAMERA_CAPTURE_IMAGE_REQUEST_CODE = 100;
@@ -64,11 +67,11 @@ public class RegisterActivity extends AppCompatActivity {
     public static final String VIDEO_EXTENSION = "mp4";
 
     private static String imageStoragePath;
-    private static long imageSize;
+
 
     public static final String FILE_NAME=null;
     private TextView txtDescription;
-    private EditText txtKonmentar;
+    private EditText txtKonmentar,txtNama,txtTelp;
     private ImageView imgPreview;
     private Button btnUpload;
     private ImageButton btnCapturePicture;
@@ -76,12 +79,22 @@ public class RegisterActivity extends AppCompatActivity {
 
     Long tsLong = System.currentTimeMillis()/1000;
 
-    String imei;
+    String imei,kodeProv;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        Spinner spinner = (Spinner) findViewById(R.id.province);
+        // Create an ArrayAdapter using the string array and a default spinner layout
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                R.array.province, android.R.layout.simple_spinner_item);
+        // Specify the layout to use when the list of choices appears
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        // Apply the adapter to the spinner
+        spinner.setAdapter(adapter);
+
+        spinner.setOnItemSelectedListener(this);
         // Checking availability of the camera
         if (!CameraUtils.isDeviceSupportCamera(getApplicationContext())) {
             Toast.makeText(getApplicationContext(),
@@ -91,12 +104,13 @@ public class RegisterActivity extends AppCompatActivity {
             // will close the app if the device doesn't have camera
             finish();
         }
-
+        txtNama = findViewById(R.id.name);
+        txtTelp= findViewById(R.id.telp);
         txtDescription = findViewById(R.id.txt_desc);
         imgPreview = findViewById(R.id.imgPreview);
         btnCapturePicture = findViewById(R.id.gallery);
         btnUpload =  findViewById(R.id.special);
-//        txtKonmentar =(EditText)findViewById(R.id.komentarPreview);
+        //        txtKonmentar =(EditText)findViewById(R.id.komentarPreview);
         /**
          * Capture image on button click
          */
@@ -118,16 +132,26 @@ public class RegisterActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 try {
-                    if (imageStoragePath.length()==0){
-                        Toast.makeText(RegisterActivity.this, "Please Take A picture"+imageStoragePath, Toast.LENGTH_SHORT).show();
+                    if (TextUtils.isEmpty(txtNama.getText())&&TextUtils.isEmpty(txtTelp.getText())){
+                        txtNama.setError("Nama Belum Diisi");
+                        txtTelp.setError("Telpon blum Diisi");
+                    }else if(TextUtils.isEmpty(txtNama.getText())){
+                        txtNama.setError("Nama Belum Diisi");
+                    }else if (TextUtils.isEmpty(txtTelp.getText())){
+                        txtTelp.setError("Telpon blum Diisi");
                     }else{
-                        askForPermission(Manifest.permission.READ_PHONE_STATE, PHONESTATS);
-                        Toast.makeText(RegisterActivity.this, "Execute Program : "+imageStoragePath, Toast.LENGTH_SHORT).show();
-                        new FtpTask().execute();
+                        if (imageStoragePath.length()==0){
+                            Toast.makeText(RegisterActivity.this, "Please Take A picture"+imageStoragePath, Toast.LENGTH_SHORT).show();
+                        }else{
+                            askForPermission(Manifest.permission.READ_PHONE_STATE, PHONESTATS);
+                            Toast.makeText(RegisterActivity.this, "Execute Program : "+imageStoragePath, Toast.LENGTH_SHORT).show();
+                            new FtpTask().execute();
 
 
 
+                        }
                     }
+
                 }catch (Exception e){
                     Toast.makeText(RegisterActivity.this, "Please Take A picture"+e, Toast.LENGTH_SHORT).show();
                     Log.d("Gagak Uplaod","Could error " +e);
@@ -169,6 +193,7 @@ public class RegisterActivity extends AppCompatActivity {
             }
         } else {
             imei = getImeiNumber();
+
 
         }
     }
@@ -396,30 +421,24 @@ public class RegisterActivity extends AppCompatActivity {
                 }).show();
     }
 
-//    private class jsonFTP extends AsyncTask<Void, Void, Boolean>{
-//
-//        @Override
-//        protected Boolean doInBackground(Void... voids) {
-//          FileTransfer ds = new FileTransfer();
-//            File file = new File(Environment.getExternalStorageDirectory()+File.separator+"temp-bawaslu");
-//           boolean jsonFtp = ds.ftpJson(file,"nama-data.json");
-//          return jsonFtp;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Boolean aBoolean) {
-//            Log.d("Sukses Terhubung","Berhasil Connection");
-//            Toast.makeText(PreviewCapture.this, "Berhasil JSON", Toast.LENGTH_SHORT).show();
-//        }
-//    }
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        kodeProv = parent.getItemAtPosition(position).toString();
+        String sSelected =parent.getItemAtPosition(position).toString();
+        Toast.makeText(this, sSelected, Toast.LENGTH_SHORT).show();
+    }
 
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+
+    }
     private class FtpTask extends AsyncTask<Void, Void, Boolean> {
 
         @Override
         protected Boolean doInBackground(Void... voids) {
 
             FileTransfer fs = new FileTransfer();
-            boolean ftp = fs.ftpConnect(imageStoragePath,"Testing");
+            boolean ftp = fs.ftpConnect(imageStoragePath,imei,txtNama.getText(),txtTelp.getText(),kodeProv);
             return ftp;
 
         }
@@ -430,21 +449,4 @@ public class RegisterActivity extends AppCompatActivity {
             Toast.makeText(RegisterActivity.this, "Berhasil Connection", Toast.LENGTH_SHORT).show();
         }
     }
-//
-//    private class uploadData extends AsyncTask<Void, Void,Boolean>{
-//
-//        @Override
-//        protected Boolean doInBackground(Void... voids) {
-//            FileTransfer fs = new FileTransfer();
-//            boolean upload = fs.ftpUpload(imageStoragePath,"Testing.jpg");
-//
-//            return upload;
-//        }
-//
-//        @Override
-//        protected void onPostExecute(Boolean aBoolean) {
-//            Log.d("Sukses Upload","Berhasil Upload");
-//            Toast.makeText(PreviewCapture.this, "Berhasil Upload Gambar", Toast.LENGTH_SHORT).show();
-//        }
-//    }
 }
