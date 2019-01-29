@@ -67,30 +67,38 @@ public class FileTransfer {
                             data.add(new String []{names,"Pemilu/"+prov[0]+"/KTP-"+ts+"_"+Imei+".jpg",telp,prov[0],ts,"-"+Imei});
 
                             writer.writeAll(data);
-                            writer.close();
                             FileInputStream fI = new FileInputStream(csv);
                             BufferedInputStream Bi = new BufferedInputStream(fI);
                             ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
-                           boolean tes = ftpClient.storeFile("Pemilu/",Bi);
+
+                            ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+
+                            boolean tes = ftpClient.storeFile("Pemilu/",Bi);
                             Log.d("TrueorFalse", "ftpConnect: "+tes);
+                            writer.close();
+                            Bi.close();
                         }else{
+                            Log.d("FolderDone", "ftpConnect: Folder Exist");
+                            String csv = root+"/Reg-"+ts+"-"+Imei+".csv";
+                            writer = new CSVWriter(new FileWriter(csv));
+
+                            List<String []> data = new ArrayList<String[]>();
+                            data.add(new String []{"Nama","File Foto","Tlp","Provinsi","Reg Timestamp","Imei"});
+                            data.add(new String []{names,"Pemilu/"+prov[0]+"/KTP-"+ts+"-"+Imei+".jpg",telp,prov[0],ts,"-"+Imei});
+
+                            writer.writeAll(data);
+                            FileInputStream fI = new FileInputStream(csv);
+                            BufferedInputStream Bi = new BufferedInputStream(fI);
+                            ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+
+                            ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+
+                            boolean tes = ftpClient.storeFile("Pemilu/",Bi);
+                            Log.d("TrueorFalse", "ftpConnect: "+tes);
+                            writer.close();
+
+                            Bi.close();
                         }
-                        Log.d("FolderDone", "ftpConnect: Folder Exist");
-                        String csv = root+"/Reg-"+ts+"-"+Imei+".csv";
-                        writer = new CSVWriter(new FileWriter(csv));
-
-                        List<String []> data = new ArrayList<String[]>();
-                        data.add(new String []{"Nama","File Foto","Tlp","Provinsi","Reg Timestamp","Imei"});
-                        data.add(new String []{names,"Pemilu/"+prov[0]+"/KTP-"+ts+"-"+Imei+".jpg",telp,prov[0],ts,"-"+Imei});
-
-                        writer.writeAll(data);
-                        writer.close();
-                        FileInputStream fI = new FileInputStream(csv);
-                        BufferedInputStream Bi = new BufferedInputStream(fI);
-                        ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
-
-                        boolean tes = ftpClient.storeFile("Pemilu/",Bi);
-                        Log.d("TrueorFalse", "ftpConnect: "+tes);
                     }catch (Exception e){
                         Log.d("FailedCSV", "ftpConnect: Gagal CSV "+e );
                     }
