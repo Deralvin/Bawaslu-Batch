@@ -1,23 +1,27 @@
 package id.pptik.bawaslubatch.features;
 
-import android.content.Intent;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Environment;
 import android.text.Editable;
 import android.util.Log;
 
 import com.opencsv.CSVWriter;
 
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.SocketException;
 import java.net.URISyntaxException;
 import java.security.KeyManagementException;
@@ -29,10 +33,8 @@ import java.util.concurrent.TimeoutException;
 import id.pptik.bawaslubatch.helpers.SendToRMQ;
 
 public class FileTransfer {
+
     SendToRMQ sendToRMQ =new SendToRMQ();
-    private static final String COMMA_DELIMITER = ",";
-    private static final String NEW_LINE_SEPARATOR = "\n";
-    private static final String FILE_HEADER = "Nama,File Foto,Tlp,Provinsi,Reg Timestamp,Imei";
 
     Long tsLong = System.currentTimeMillis()/1000;
 
@@ -75,7 +77,7 @@ public class FileTransfer {
 
                 List<String []> data = new ArrayList<String[]>();
                 data.add(new String []{"Nama","File Foto","Tlp","Provinsi","Reg Timestamp","Imei"});
-                data.add(new String []{names,"Pemilu/"+prov[0]+"/KTP-"+ts+"_"+Imei+".jpg",telp,ts,"-"+Imei});
+                data.add(new String []{names,"Pemilu/"+prov[0]+"/KTP-"+ts+"_"+Imei+".jpg",telp,prov[0],ts,"-"+Imei});
 
                 writer.writeAll(data);
                 writer.close();
@@ -94,9 +96,6 @@ public class FileTransfer {
                 sendToRMQ.sendRMQFan(obj.toString());
                 boolean  status = ftpClient.storeFile("Pemilu/"+prov[0]+"/KTP-"+ts+"_"+Imei+".jpg", bis);
                 boolean result = ftpClient.storeFile("Pemilu/"+prov[0]+"/Reg-"+ts+"-"+Imei+".csv",bif);
-
-////                boolean sendData =sendCSV(data);
-//                Log.d("StoreCSVExist", "ftpConnect: "+sendData);
 
                 bif.close();
                 bis.close();
@@ -125,24 +124,181 @@ public class FileTransfer {
         return false;
     }
 
-    private boolean sendCSV(String src){
+    public boolean ftpReport(String srcFilePath, Editable comment, Context context){
         try {
+            SharedPreferences pref = context.getSharedPreferences("MyPref", 0);
+            String komentar = String.valueOf(comment);
             FTPClient ftpClient = new FTPClient();
             ftpClient.connect("bawaslu-ftp.pptik.id");
-
-            if (FTPReply.isPositiveCompletion(ftpClient.getReplyCode())){
+            if(FTPReply.isPositiveCompletion(ftpClient.getReplyCode())){
                 boolean status1 = ftpClient.login("pemilu","pemilu123!");
                 ftpClient.enterLocalPassiveMode();
-                Log.d("ConnectionSuccessCSV", "ftpConnect: berhasil status = "+status1);
+                Log.d("Connection success", "ftpConnect: berhasil status = "+status1);
+
+                FileInputStream srcFileStream = new FileInputStream(srcFilePath);
+                BufferedInputStream bis = new BufferedInputStream(srcFileStream);
+                ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+                String ts = tsLong.toString();
 
 
+                String randomUID =pref.getString("GUID",null);
+                JSONObject obj = new JSONObject();
+                obj.put("NAMA","Dilan");
+                obj.put("FILENAME","Pemilu/32/"+ts+"-"+randomUID+".jpg");
+                obj.put("PROVINSI","32");
+                obj.put("KOMENTAR",komentar);
+                obj.put("Reg_TimeStamp",ts);
 
+
+                sendToRMQ.sendRMQreport(obj.toString());
+                boolean  status = ftpClient.storeFile("Pemilu/32/"+ts+"-"+randomUID+".jpg", bis);
+                bis.close();
+
+
+                return status;
             }
-        }catch (Exception e){
+        } catch (SocketException e) {
+            Log.d("FTP1", "Error: could not connect to socket " + e );
+        } catch (IOException e) {
+            Log.d("FTP2", "Error: could not connect to host " + e );
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.d("FTP3", "Error: could not connect to host " + e );
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
 
+
+    public boolean downloadFile() throws IOException {
+        boolean result = false;
+        File root = new File(Environment.getExternalStorageDirectory() + "/tmpBanwasl/Aduhh.csv");
+        Log.d("DicobaKK", "downloadFile: "+root);
+        FTPClient ftpClient = new FTPClient();
+        ftpClient.connect("bawaslu-ftp.pptik.id");
+        boolean stass = ftpClient.login("pemilu","pemilu123!");
+        Log.d("DicobaKK", "Login: "+stass);
+        try {
+            ftpClient.connect("bawaslu-ftp.pptik.id");
+            if(FTPReply.isPositiveCompletion(ftpClient.getReplyCode())){
+                boolean stas = ftpClient.login("pemilu","pemilu123!");
+                Log.d("DicobaKK", "Login: "+stas);
+                ftpClient.enterLocalPassiveMode();
+                try (BufferedOutputStream out = new BufferedOutputStream(
+                        new FileOutputStream(root))) {
+                    result = ftpClient.retrieveFile("Pemilu/32/Report.csv", out);
+                    if (result) {
+                        result = true;
+                        Log.d("file-->成功从FTP服务器下载","ARGGHHHH");
+                    }
+                } catch (Exception e) {
+                    Log.e("errorssss","sdadas "+e.getMessage() );
+                } finally {
+                    ftpClient.disconnect();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.e("errorssss","sdadas "+e.getMessage() );
+        }
+        if (null == ftpClient || !ftpClient.isConnected()) {
+            return result;
         }
 
-        return false;
+        return result;
+    }
+
+    public boolean connectClient() throws IOException {
+        FTPClient client =new FTPClient();
+        boolean isLoggedIn = true;
+        client.setControlEncoding("UTF-8");
+        client.connect("bawaslu-ftp.pptik.id", 21);
+        client.setFileType(FTP.BINARY_FILE_TYPE);
+        client.enterLocalPassiveMode();
+        client.login("pemilu", "pemilu123!");
+        int reply = client.getReplyCode();
+        if (!FTPReply.isPositiveCompletion(reply)) {
+            client.disconnect();
+            Log.d("FaildeLoadingLogin", "Negative reply form FTP server, aborting, id was {}:"+ reply);
+            //throw new IOException("failed to connect to FTP server");
+            isLoggedIn = false;
+        }
+        return isLoggedIn;
+    }
+//    public void downloadFiles() {
+//        File root =new File(Environment.getExternalStorageDirectory()+"/tmpBanwasl/Aduhh.csv");
+//        String src = String.valueOf(root);
+//        FTPClient client = new FTPClient();
+//        try (BufferedInputStream os = new BufferedInputStream(new FileInputStream(src))) {
+//            client.connect("bawaslu-ftp.pptik.id");
+//            client.login("admin", "admin123**");
+//
+//            // Download file from FTP server.
+//            boolean status = client.retrieveFile("Pemilu/32/Report.csv", os);
+//            os.close();
+//            Log.d("Gotcha", "downloadFiles: "+status);
+//
+//        } catch (IOException e) {
+//            e.printStackTrace();  Log.d("Gotcha1", "downloadFiles: "+e);
+//        } finally {
+//            try {
+//                client.disconnect();
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//                Log.d("Gotcha2", "downloadFiles: "+e);
+//            }
+//        }
+//
+//    }
+    public boolean downloadAndSaveFile(String server, int portNumber,
+                                        String user, String password, String filename, File localFile)
+            throws IOException {
+        FTPClient ftp = null;
+
+        try {
+            ftp = new FTPClient();
+            try {
+                ftp.connect(server, portNumber);
+                Log.d("kasih_ibu", "Connected. Reply: " + ftp.getReplyString());
+
+                ftp.login(user, password);
+                Log.d("kasih_ibu", "Logged in");
+                ftp.setFileType(FTP.BINARY_FILE_TYPE);
+                Log.d("kasih_ibu", "Downloading");
+                ftp.enterLocalPassiveMode();
+            }
+            catch (Exception ex) {
+                Log.d("ibu_marah", "downloadAndSaveFile: "+ex.getMessage());
+            }
+
+            OutputStream outputStream = null;
+            boolean success = false;
+            try {
+                outputStream = new BufferedOutputStream(new FileOutputStream(
+                        localFile));
+                success = ftp.retrieveFile(filename, outputStream);
+            } finally {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            }
+
+            return success;
+        } finally {
+            if (ftp != null) {
+                ftp.logout();
+                ftp.disconnect();
+            }
+        }
     }
 
 }
