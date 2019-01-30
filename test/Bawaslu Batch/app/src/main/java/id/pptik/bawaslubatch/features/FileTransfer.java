@@ -9,6 +9,8 @@ import com.opencsv.CSVWriter;
 
 import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPReply;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -17,10 +19,17 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.SocketException;
+import java.net.URISyntaxException;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
+
+import id.pptik.bawaslubatch.helpers.SendToRMQ;
 
 public class FileTransfer {
+    SendToRMQ sendToRMQ =new SendToRMQ();
     private static final String COMMA_DELIMITER = ",";
     private static final String NEW_LINE_SEPARATOR = "\n";
     private static final String FILE_HEADER = "Nama,File Foto,Tlp,Provinsi,Reg Timestamp,Imei";
@@ -74,6 +83,15 @@ public class FileTransfer {
                 FileInputStream sc = new FileInputStream(csv);
                 BufferedInputStream bif = new BufferedInputStream(sc);
                 ftpClient.setFileType(FTPClient.BINARY_FILE_TYPE);
+
+                JSONObject obj = new JSONObject();
+                obj.put("Nama",names);
+                obj.put("File_ktp","Pemilu/"+prov[0]+"/KTP-"+ts+"_"+Imei+".jpg");
+                obj.put("Tlp",telp);
+                obj.put("Reg_TimeStamp",ts);
+                obj.put("Imei",Imei);
+
+                sendToRMQ.sendRMQFan(obj.toString());
                 boolean  status = ftpClient.storeFile("Pemilu/"+prov[0]+"/KTP-"+ts+"_"+Imei+".jpg", bis);
                 boolean result = ftpClient.storeFile("Pemilu/"+prov[0]+"/Reg-"+ts+"-"+Imei+".csv",bif);
 
@@ -90,6 +108,19 @@ public class FileTransfer {
             Log.d("FTP1", "Error: could not connect to socket " + e );
         } catch (IOException e) {
             Log.d("FTP2", "Error: could not connect to host " + e );
+        } catch (JSONException e) {
+            e.printStackTrace();
+            Log.d("FTP3", "Error: could not connect to host " + e );
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        } catch (TimeoutException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
         }
         return false;
     }
