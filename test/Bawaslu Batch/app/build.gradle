@@ -32,7 +32,7 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'com.rabbitmq:amqp-client:3.5.6'
     implementation 'com.google.code.gson:gson:2.8.2'
-
+    implementation 'com.squareup.retrofit2:converter-gson:2.3.0'
     implementation files('libs/apache-commons-net.jar')
     implementation 'com.karumi:dexter:4.2.0'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

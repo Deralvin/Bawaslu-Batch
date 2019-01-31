@@ -6,4 +6,8 @@
     <string name="btn_record_video">Record Video</string>
     <string name="btn_upload">Upload Data</string>
     <string name="mvCapt">Upload Image</string>
+    <string name="pref_nama">NAMA</string>
+    <string name="pref_prov">PROVINSI</string>
+    <string name="pref_tlp">TLP</string>
+    <string name="pref_guid">GUID</string>
 </resources>

@@ -18,14 +18,14 @@
             app:srcCompat="@drawable/ic_photo_camera" />
 
         <TextView
-            android:id="@+id/card_poster"
+            android:id="@+id/card_tgl"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Photo by ....."
             android:textSize="20dp" />
 
         <TextView
-            android:id="@+id/card_location"
+            android:id="@+id/card_tlp"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"

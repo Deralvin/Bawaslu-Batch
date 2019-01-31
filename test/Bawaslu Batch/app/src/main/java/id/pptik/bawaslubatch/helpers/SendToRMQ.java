@@ -19,7 +19,7 @@ public class SendToRMQ {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
 
-    public  void  sendRMQFan(String getJSON) throws NoSuchAlgorithmException, KeyManagementException, URISyntaxException, IOException, TimeoutException, InterruptedException {
+    public  void  sendRMQRegister(String getJSON) throws NoSuchAlgorithmException, KeyManagementException, URISyntaxException, IOException, TimeoutException, InterruptedException {
 
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUri("amqp://pemilu:pemilu123!@167.205.7.19");
@@ -37,7 +37,7 @@ public class SendToRMQ {
         //send message TO RMQ
 
         String messageOn = getJSON ;
-        channel.basicPublish("amq.topic","pemilu2019",null,messageOn.getBytes());
+        channel.basicPublish("amq.topic","regis",null,messageOn.getBytes());
         //System.out.println("published mesasge"  + messageOn);
 
 

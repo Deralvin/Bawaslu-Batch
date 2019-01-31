@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -40,7 +41,9 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 
 import java.io.File;
 import java.util.List;
+import java.util.UUID;
 
+import id.pptik.bawaslubatch.MainActivity;
 import id.pptik.bawaslubatch.R;
 import id.pptik.bawaslubatch.helpers.CameraUtils;
 
@@ -84,87 +87,97 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
+        SharedPreferences prefs = getSharedPreferences("myToken", MODE_PRIVATE);
+        String guid = prefs.getString(String.valueOf(R.string.pref_guid),null);
 
-        Spinner spinner = (Spinner) findViewById(R.id.province);
-        // Create an ArrayAdapter using the string array and a default spinner layout
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-                R.array.province, android.R.layout.simple_spinner_item);
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        // Apply the adapter to the spinner
-        spinner.setAdapter(adapter);
-
-        spinner.setOnItemSelectedListener(this);
-        // Checking availability of the camera
-        if (!CameraUtils.isDeviceSupportCamera(getApplicationContext())) {
-            Toast.makeText(getApplicationContext(),
-                    "Sorry! Your device doesn't support camera",
-                    Toast.LENGTH_LONG).show();
-            // will close the app if the device doesn't have camera
-            // will close the app if the device doesn't have camera
+        if (guid != null){
+            Intent in = new Intent(this,MainActivity.class);
+            startActivity(in);
             finish();
-        }
-        txtNama = findViewById(R.id.name);
-        txtTelp= findViewById(R.id.telp);
-        txtDescription = findViewById(R.id.txt_desc);
-        imgPreview = findViewById(R.id.imgPreview);
-        btnCapturePicture = findViewById(R.id.gallery);
-        btnUpload =  findViewById(R.id.special);
-        //        txtKonmentar =(EditText)findViewById(R.id.komentarPreview);
-        /**
-         * Capture image on button click
-         */
-        btnCapturePicture.setOnClickListener(new View.OnClickListener() {
+        }else{
+            Toast.makeText(this, "UUID nya = "+guid, Toast.LENGTH_SHORT).show();
+            Spinner spinner = (Spinner) findViewById(R.id.province);
+            // Create an ArrayAdapter using the string array and a default spinner layout
+            ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+                    R.array.province, android.R.layout.simple_spinner_item);
+            // Specify the layout to use when the list of choices appears
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            // Apply the adapter to the spinner
+            spinner.setAdapter(adapter);
 
-            @Override
-            public void onClick(View v) {
-
-
-                if (CameraUtils.checkPermissions(getApplicationContext())) {
-                    captureImage();
-                } else {
-                    requestCameraPermission(MEDIA_TYPE_IMAGE);
-                }
+            spinner.setOnItemSelectedListener(this);
+            // Checking availability of the camera
+            if (!CameraUtils.isDeviceSupportCamera(getApplicationContext())) {
+                Toast.makeText(getApplicationContext(),
+                        "Sorry! Your device doesn't support camera",
+                        Toast.LENGTH_LONG).show();
+                // will close the app if the device doesn't have camera
+                // will close the app if the device doesn't have camera
+                finish();
             }
-        });
+            txtNama = findViewById(R.id.name);
+            txtTelp= findViewById(R.id.telp);
+            txtDescription = findViewById(R.id.txt_desc);
+            imgPreview = findViewById(R.id.imgPreview);
+            btnCapturePicture = findViewById(R.id.gallery);
+            btnUpload =  findViewById(R.id.special);
+            //        txtKonmentar =(EditText)findViewById(R.id.komentarPreview);
+            /**
+             * Capture image on button click
+             */
+            btnCapturePicture.setOnClickListener(new View.OnClickListener() {
 
-        btnUpload.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                try {
-                    if (TextUtils.isEmpty(txtNama.getText())&&TextUtils.isEmpty(txtTelp.getText())){
-                        txtNama.setError("Nama Belum Diisi");
-                        txtTelp.setError("Telpon blum Diisi");
-                    }else if(TextUtils.isEmpty(txtNama.getText())){
-                        txtNama.setError("Nama Belum Diisi");
-                    }else if (TextUtils.isEmpty(txtTelp.getText())){
-                        txtTelp.setError("Telpon blum Diisi");
-                    }else{
-                        if (imageStoragePath.length()==0){
-                            Toast.makeText(RegisterActivity.this, "Please Take A picture"+imageStoragePath, Toast.LENGTH_SHORT).show();
-                        }else{
-                            askForPermission(Manifest.permission.READ_PHONE_STATE, PHONESTATS);
-                            Toast.makeText(RegisterActivity.this, "Execute Program : "+imageStoragePath, Toast.LENGTH_SHORT).show();
-                            new FtpTask().execute();
+                @Override
+                public void onClick(View v) {
 
 
-
-                        }
+                    if (CameraUtils.checkPermissions(getApplicationContext())) {
+                        captureImage();
+                    } else {
+                        requestCameraPermission(MEDIA_TYPE_IMAGE);
                     }
-
-                }catch (Exception e){
-                    Toast.makeText(RegisterActivity.this, "Please Take A picture"+e, Toast.LENGTH_SHORT).show();
-                    Log.d("Gagak Uplaod","Could error " +e);
                 }
-            }
-        });
-        /**
-         * Record video on button click
-         */
+            });
 
-        // restoring storage image path from saved instance state
-        // otherwise the path will be null on device rotation
-        restoreFromBundle(savedInstanceState);
+            btnUpload.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    try {
+                        if (TextUtils.isEmpty(txtNama.getText())&&TextUtils.isEmpty(txtTelp.getText())){
+                            txtNama.setError("Nama Belum Diisi");
+                            txtTelp.setError("Telpon blum Diisi");
+                        }else if(TextUtils.isEmpty(txtNama.getText())){
+                            txtNama.setError("Nama Belum Diisi");
+                        }else if (TextUtils.isEmpty(txtTelp.getText())){
+                            txtTelp.setError("Telpon blum Diisi");
+                        }else{
+                            if (imageStoragePath.length()==0){
+                                Toast.makeText(RegisterActivity.this, "Please Take A picture"+imageStoragePath, Toast.LENGTH_SHORT).show();
+                            }else{
+                                askForPermission(Manifest.permission.READ_PHONE_STATE, PHONESTATS);
+                                Toast.makeText(RegisterActivity.this, "Execute Program : "+imageStoragePath, Toast.LENGTH_SHORT).show();
+                                new FtpTask().execute();
+
+
+
+                            }
+                        }
+
+                    }catch (Exception e){
+                        Toast.makeText(RegisterActivity.this, "Please Take A picture"+e, Toast.LENGTH_SHORT).show();
+                        Log.d("Gagak Uplaod","Could error " +e);
+                    }
+                }
+            });
+            /**
+             * Record video on button click
+             */
+
+            // restoring storage image path from saved instance state
+            // otherwise the path will be null on device rotation
+            restoreFromBundle(savedInstanceState);
+        }
+
     }
     @SuppressLint("MissingPermission")
     private String getImeiNumber() {
@@ -436,9 +449,8 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
 
         @Override
         protected Boolean doInBackground(Void... voids) {
-
             FileTransfer fs = new FileTransfer();
-            boolean ftp = fs.ftpConnect(imageStoragePath,imei,txtNama.getText(),txtTelp.getText(),kodeProv);
+            boolean ftp = fs.ftpConnect(imageStoragePath,imei,txtNama.getText(),txtTelp.getText(),kodeProv,getApplicationContext());
             return ftp;
 
         }
@@ -447,6 +459,9 @@ public class RegisterActivity extends AppCompatActivity implements AdapterView.O
         protected void onPostExecute(Boolean ftpClient) {
             Log.d("Sukses Terhubung","Berhasil Connection");
             Toast.makeText(RegisterActivity.this, "Berhasil Connection", Toast.LENGTH_SHORT).show();
+            Intent in = new Intent(RegisterActivity.this,MainActivity.class);
+            startActivity(in);
+            finish();
         }
     }
 }

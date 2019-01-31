@@ -7,6 +7,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -36,6 +37,8 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener;
 import java.io.File;
 import java.util.List;
 
+
+import id.pptik.bawaslubatch.MainActivity;
 import id.pptik.bawaslubatch.R;
 import id.pptik.bawaslubatch.helpers.CameraUtilsReport;
 
@@ -417,15 +420,20 @@ public class PreviewCapture extends AppCompatActivity {
         protected Boolean doInBackground(Void... voids) {
 
             FileTransfer fs = new FileTransfer();
-            boolean ftp = fs.ftpReport(imageStoragePath,txtKonmentar.getText(),getApplicationContext());
+            boolean ftp = fs.ftpReport(imageStoragePath,txtKonmentar.getText(),getApplicationContext(),imei);
+
             return ftp;
 
         }
 
         @Override
         protected void onPostExecute(Boolean ftpClient) {
+
             Log.d("Sukses Terhubung","Berhasil Connection");
             Toast.makeText(PreviewCapture.this, "Berhasil Connection", Toast.LENGTH_SHORT).show();
+            Intent in = new Intent(PreviewCapture.this,MainActivity.class);
+            startActivity(in);
+            finish();
         }
     }
 }
