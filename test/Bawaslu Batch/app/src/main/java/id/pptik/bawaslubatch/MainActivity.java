@@ -43,7 +43,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 
-import id.pptik.bawaslubatch.Adapter.DataAdapter;
+
 import id.pptik.bawaslubatch.features.FileTransfer;
 import id.pptik.bawaslubatch.features.PreviewCapture;
 import id.pptik.bawaslubatch.helpers.CSVReaders;
@@ -59,6 +59,7 @@ import java.io.FileReader;
 
 public class MainActivity extends AppCompatActivity {
 
+
     InputStream inputStream;
     String[] data;
     private FloatingActionButton btnCapturePicture;
@@ -66,11 +67,11 @@ public class MainActivity extends AppCompatActivity {
     private List<Post> postList = new ArrayList<>();
     private RecyclerView recyclerView;
     FileTransfer fileTransfer =new FileTransfer();
-//    private PostAdapter pAdapter;
+    //    private PostAdapter pAdapter;
     List<dataContent> listcontent=new ArrayList<>();
     private String csv_download_url = "http://filehosting.pptik.id/Bawaslu-Ftp-Testing/32/73/02/3273021547479080_990000862471858_351756051523997.csv";
     public dataContent content;
-    private DataAdapter adapter;
+//    private DataAdapter adapter;
     RatingBar ratingBar;
 
     @Override
@@ -78,6 +79,8 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         recyclerView = (RecyclerView) findViewById(R.id.photostream);
+        SharedPreferences prefs = getSharedPreferences("myToken", MODE_PRIVATE);
+        String prov = prefs.getString(String.valueOf(R.string.pref_prov),null);
 
 //        pAdapter = new PostAdapter(postList);
 //        RecyclerView.LayoutManager mLayoutManager = new LinearLayoutManager(getApplicationContext());
@@ -111,17 +114,20 @@ public class MainActivity extends AppCompatActivity {
 //        for (int i = 0; i < rows.size(); i++) {
 //            Log.d("FormatData", String.format("row %s: %s, %s", i, rows.get(i)[0], rows.get(i)[1]));
 //        }
-new GetContacts().execute();
+        Toast.makeText(this, "privs="+prov, Toast.LENGTH_SHORT).show();
+        new argh().execute();
     }
 
     public class argh extends AsyncTask<Void, Void, Boolean>{
+        SharedPreferences prefs = getSharedPreferences("myToken", MODE_PRIVATE);
+        String prov = prefs.getString(String.valueOf(R.string.pref_prov),null);
 
         @Override
         protected Boolean doInBackground(Void... voids) {
             FileTransfer fileTransfer = new FileTransfer();
             boolean status = false;
             try {
-                status = fileTransfer.downloadAndSaveFile("167.205.7.21", 21, "pemilu", "pemilu123!", "/Pemilu/32/DataReport.csv", new File(Environment.getExternalStorageDirectory()+"/tmpBanwasl/DataReport.csv"));
+                status = fileTransfer.downloadAndSaveFile("bawaslu-ftp.pptik.id", 21, "pemilu", "pemilu123!", "/Pemilu/"+prov+"/report/TOC.josn", new File(Environment.getExternalStorageDirectory()+"/tmpBanwasl/TOC.json"));
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -131,11 +137,12 @@ new GetContacts().execute();
     }
 
     public class downloadData extends AsyncTask<Void, Void, Void>{
-
+        SharedPreferences prefs = getSharedPreferences("myToken", MODE_PRIVATE);
+        String prov = prefs.getString(String.valueOf(R.string.pref_prov),null);
         @Override
         protected Void doInBackground(Void... voids) {
             HttpHandler sh = new HttpHandler();
-            String jsonStr = sh.makeServiceCall("bawaslu-ftp.pptik.id:5000/Pemilu/32/TOC.json");
+            String jsonStr = sh.makeServiceCall("bawaslu-ftp.pptik.id:5000/Pemilu/"+prov+"/report//TOC.json");
             Log.e("WorthIt", "Response from url: " + jsonStr);
 
             if (jsonStr !=null){
@@ -150,65 +157,65 @@ new GetContacts().execute();
             return null;
         }
     }
-    public class GetContacts extends AsyncTask<Void, Void, Void> {
-
-
-        @Override
-        protected Void doInBackground(Void... arg0) {
-            HttpHandler sh = new HttpHandler();
-
-            // Making a request to url and getting response
-            String jsonStr = sh.makeServiceCall("bawaslu-ftp.pptik.id:5000/Pemilu/32/report/TOC.json");
-
-            Log.e("WorthTIsa", "Response from url: " + jsonStr);
-
-            if (jsonStr != null) {
-                try {
-                    JSONObject jsonObj = new JSONObject(jsonStr);
-
-                    // Getting JSON Array node
-                    JSONArray contacts =jsonObj.getJSONArray("data");
-
-                    // looping through All Contacts
-                    for (int i = 0; i < contacts.length(); i++) {
-                        JSONObject c = contacts.getJSONObject(i);
-
-                        content.komentar=c.getString("komentar");
-                        content.timestamp=c.getString("timestamp");
-
-                        content.tlp1=c.getString("te");
-
-                        listcontent.add(content);
-                    }
-                } catch (final JSONException e) {
-                    Log.e("MakanBang", "Json parsing error: " + e.getMessage());
-                }
-            } else {
-                Log.e("GAGAL", "Couldn't get json from server.");
-
-
-            }
-
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            super.onPostExecute(result);
-
-
-            /**
-             * Updating parsed JSON data into ListView
-             * */
-
-            recyclerView=findViewById(R.id.photostream);
-            recyclerView.setHasFixedSize(true);
-            RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
-            recyclerView.setLayoutManager(layoutManager);
-            adapter=new DataAdapter(getApplicationContext(),listcontent);
-            recyclerView.setAdapter(adapter);
-        }
-
-    }
+//    public class GetContacts extends AsyncTask<Void, Void, Void> {
+//
+//
+//        @Override
+//        protected Void doInBackground(Void... arg0) {
+//            HttpHandler sh = new HttpHandler();
+//
+//            // Making a request to url and getting response
+//            String jsonStr = sh.makeServiceCall("bawaslu-ftp.pptik.id:5000/Pemilu/32/report/TOC.json");
+//
+//            Log.e("WorthTIsa", "Response from url: " + jsonStr);
+//
+//            if (jsonStr != null) {
+//                try {
+//                    JSONObject jsonObj = new JSONObject(jsonStr);
+//
+//                    // Getting JSON Array node
+//                    JSONArray contacts =jsonObj.getJSONArray("data");
+//
+//                    // looping through All Contacts
+//                    for (int i = 0; i < contacts.length(); i++) {
+//                        JSONObject c = contacts.getJSONObject(i);
+//
+//                        content.komentar=c.getString("komentar");
+//                        content.timestamp=c.getString("timestamp");
+//
+//                        content.tlp1=c.getString("te");
+//
+//                        listcontent.add(content);
+//                    }
+//                } catch (final JSONException e) {
+//                    Log.e("MakanBang", "Json parsing error: " + e.getMessage());
+//                }
+//            } else {
+//                Log.e("GAGAL", "Couldn't get json from server.");
+//
+//
+//            }
+//
+//            return null;
+//        }
+//
+//        @Override
+//        protected void onPostExecute(Void result) {
+//            super.onPostExecute(result);
+//
+//
+//            /**
+//             * Updating parsed JSON data into ListView
+//             * */
+//
+//            recyclerView=findViewById(R.id.photostream);
+//            recyclerView.setHasFixedSize(true);
+//            RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getApplicationContext());
+//            recyclerView.setLayoutManager(layoutManager);
+//            adapter=new DataAdapter(getApplicationContext(),listcontent);
+//            recyclerView.setAdapter(adapter);
+//        }
+//
+//    }
 
 }

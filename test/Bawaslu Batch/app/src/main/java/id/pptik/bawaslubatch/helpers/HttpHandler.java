@@ -1,5 +1,4 @@
 package id.pptik.bawaslubatch.helpers;
-
 import android.util.Log;
 
 import java.io.BufferedInputStream;
@@ -58,6 +57,7 @@ public class HttpHandler {
                 e.printStackTrace();
             }
         }
+
         return sb.toString();
     }
 }
